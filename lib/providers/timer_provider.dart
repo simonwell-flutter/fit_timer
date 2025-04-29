@@ -21,10 +21,15 @@ class TimerProvider with ChangeNotifier {
   final AudioPlayer _tickPlayer = AudioPlayer();
   final AudioPlayer _phaseChangePlayer = AudioPlayer();
   final AudioPlayer _completePlayer = AudioPlayer();
+  final AudioPlayer _completeVoicePlayer = AudioPlayer();
   final AudioPlayer _phaseEndPlayer = AudioPlayer();
   final AudioPlayer _countThreePlayer = AudioPlayer();
   final AudioPlayer _countTwoPlayer = AudioPlayer();
   final AudioPlayer _countOnePlayer = AudioPlayer();
+  final AudioPlayer _restPlayer = AudioPlayer();
+  final AudioPlayer _workPlayer = AudioPlayer();
+  final AudioPlayer _warmupPlayer = AudioPlayer();
+  final AudioPlayer _cooldownPlayer = AudioPlayer();
 
   TimerProvider() {
     _initializeAudio();
@@ -54,10 +59,15 @@ class TimerProvider with ChangeNotifier {
       await _tickPlayer.setVolume(1.0);
       await _phaseChangePlayer.setAsset('assets/sounds/phase_change.mp3');
       await _completePlayer.setAsset('assets/sounds/complete.mp3');
+      await _completeVoicePlayer.setAsset('assets/sounds/complete_voice.mp3');
       await _phaseEndPlayer.setAsset('assets/sounds/phase_end.mp3');
       await _countThreePlayer.setAsset('assets/sounds/three.mp3');
       await _countTwoPlayer.setAsset('assets/sounds/two.mp3');
       await _countOnePlayer.setAsset('assets/sounds/one.mp3');
+      await _restPlayer.setAsset('assets/sounds/rest.mp3');
+      await _workPlayer.setAsset('assets/sounds/work.mp3');
+      await _warmupPlayer.setAsset('assets/sounds/warmup.mp3');
+      await _cooldownPlayer.setAsset('assets/sounds/cooldown.mp3');
     } catch (e) {
       debugPrint('Error initializing audio: $e');
     }
@@ -121,8 +131,15 @@ class TimerProvider with ChangeNotifier {
   }
 
   // 開始/恢復計時
-  void start() {
+  Future<void> start() async {
     if (_status == TimerStatus.running) return;
+
+    if (_phase == TimerPhase.warmup) {
+      await _warmupPlayer.stop();
+      await _warmupPlayer.seek(Duration.zero);
+      await _warmupPlayer.setVolume(1.0);
+      await _warmupPlayer.play();
+    }
 
     _status = TimerStatus.running;
     _timer = Timer.periodic(Duration(seconds: 1), _tick);
@@ -158,7 +175,7 @@ class TimerProvider with ChangeNotifier {
   }
 
   // 計時器跳動
-  void _tick(Timer timer) {
+  Future<void> _tick(Timer timer) async {
     if (_secondsRemaining > 0) {
       _secondsRemaining--;
       // 只在運動階段播放滴答聲
@@ -166,6 +183,7 @@ class TimerProvider with ChangeNotifier {
         _tickPlayer.seek(Duration.zero);
         _tickPlayer.play();
       }
+      // 倒數 3、2、1 語音
       if (_secondsRemaining == 3) {
         _countThreePlayer.seek(Duration.zero);
         _countThreePlayer.play();
@@ -181,38 +199,65 @@ class TimerProvider with ChangeNotifier {
         _phaseEndPlayer.play();
       }
     } else {
-      _moveToNextPhase();
+      await _moveToNextPhase();
     }
     notifyListeners();
   }
 
   // 移動到下一階段
-  void _moveToNextPhase() {
+  Future<void> _moveToNextPhase() async {
     if (_currentWorkout == null) return;
+
+    // 切換階段時先停止舊的 timer
+    _timer?.cancel();
 
     switch (_phase) {
       case TimerPhase.warmup:
         _phase = TimerPhase.work;
         _secondsRemaining = _currentWorkout!.workSeconds;
+        notifyListeners();
+        await Future.delayed(Duration(milliseconds: 20));
+        await _workPlayer.stop();
+        await _workPlayer.seek(Duration.zero);
+        await _workPlayer.setVolume(1.0);
+        await _workPlayer.play();
+        _timer = Timer.periodic(Duration(seconds: 1), _tick);
         break;
       case TimerPhase.work:
         if (_currentCycle < _currentWorkout!.cycles - 1) {
           _phase = TimerPhase.rest;
           _secondsRemaining = _currentWorkout!.restSeconds;
+          _restPlayer.seek(Duration.zero);
+          _restPlayer.play();
+          _timer = Timer.periodic(Duration(seconds: 1), _tick);
         } else if (_currentWorkout!.cooldownSeconds > 0) {
           _phase = TimerPhase.cooldown;
           _secondsRemaining = _currentWorkout!.cooldownSeconds;
+          notifyListeners();
+          await Future.delayed(Duration(milliseconds: 20));
+          await _cooldownPlayer.stop();
+          await _cooldownPlayer.seek(Duration.zero);
+          await _cooldownPlayer.setVolume(1.0);
+          await _cooldownPlayer.play();
+          _timer = Timer.periodic(Duration(seconds: 1), _tick);
         } else {
-          _complete();
+          await _complete();
         }
         break;
       case TimerPhase.rest:
         _phase = TimerPhase.work;
         _currentCycle++;
         _secondsRemaining = _currentWorkout!.workSeconds;
+        notifyListeners();
+        await Future.delayed(Duration(milliseconds: 20));
+        await _workPlayer.stop();
+        await _workPlayer.seek(Duration.zero);
+        await _workPlayer.setVolume(1.0);
+        await _workPlayer.play();
+        _timer = Timer.periodic(Duration(seconds: 1), _tick);
         break;
       case TimerPhase.cooldown:
-        _complete();
+        await _complete();
         break;
       case TimerPhase.complete:
         break;
@@ -220,12 +265,16 @@ class TimerProvider with ChangeNotifier {
   }
 
   // 完成訓練
-  void _complete() {
+  Future<void> _complete() async {
     _timer?.cancel();
     _phase = TimerPhase.complete;
     _status = TimerStatus.finished;
     _completePlayer.seek(Duration.zero);
     _completePlayer.play();
+    await _completeVoicePlayer.stop();
+    await _completeVoicePlayer.seek(Duration.zero);
+    await _completeVoicePlayer.setVolume(1.0);
+    await _completeVoicePlayer.play();
   }
 
   // 計算總時間
@@ -298,10 +347,15 @@ class TimerProvider with ChangeNotifier {
     _tickPlayer.dispose();
     _phaseChangePlayer.dispose();
     _completePlayer.dispose();
+    _completeVoicePlayer.dispose();
     _phaseEndPlayer.dispose();
     _countThreePlayer.dispose();
     _countTwoPlayer.dispose();
     _countOnePlayer.dispose();
+    _restPlayer.dispose();
+    _workPlayer.dispose();
+    _warmupPlayer.dispose();
+    _cooldownPlayer.dispose();
     super.dispose();
   }
 }
