@@ -34,17 +34,23 @@ class SavedWorkoutsScreen extends StatelessWidget {
       ),
       body:
           workoutProvider.isLoading
-              ? Center(child: CircularProgressIndicator())
+              ? Center(
+                child: CircularProgressIndicator(color: Color(0xFFBB86FC)),
+              )
               : workouts.isEmpty
               ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.fitness_center, size: 64, color: Colors.grey),
+                    Icon(
+                      Icons.fitness_center,
+                      size: 64,
+                      color: Color(0xFFBB86FC),
+                    ),
                     SizedBox(height: 16),
                     Text(
                       '沒有保存的訓練計劃',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
+                      style: TextStyle(fontSize: 18, color: Colors.white70),
                     ),
                     SizedBox(height: 24),
                     ElevatedButton(
@@ -120,13 +126,17 @@ class WorkoutCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                   ),
                   IconButton(
                     icon: Icon(
                       workout.isFavorite ? Icons.star : Icons.star_border,
-                      color: workout.isFavorite ? Colors.amber : Colors.grey,
+                      color:
+                          workout.isFavorite
+                              ? Color(0xFFBB86FC)
+                              : Colors.white70,
                     ),
                     onPressed: () {
                       workoutProvider.toggleFavorite(workout.id);
@@ -207,7 +217,9 @@ class WorkoutCard extends StatelessWidget {
                   ),
                   SizedBox(width: 8),
                   TextButton(
-                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Color(0xFFCF6679),
+                    ),
                     onPressed: () {
                       showDialog(
                         context: context,
@@ -224,7 +236,7 @@ class WorkoutCard extends StatelessWidget {
                                 ),
                                 TextButton(
                                   style: TextButton.styleFrom(
-                                    foregroundColor: Colors.red,
+                                    foregroundColor: Color(0xFFCF6679),
                                   ),
                                   onPressed: () {
                                     workoutProvider.deleteWorkout(workout.id);
@@ -263,11 +275,13 @@ class _InfoItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, color: Theme.of(context).primaryColor),
+        Icon(icon, color: Color(0xFFBB86FC)),
         SizedBox(height: 4),
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-        SizedBox(height: 2),
-        Text(value, style: TextStyle(fontWeight: FontWeight.w500)),
+        Text(label, style: TextStyle(color: Colors.white70)),
+        Text(
+          value,
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
       ],
     );
   }

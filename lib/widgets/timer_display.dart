@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/timer_provider.dart';
+import 'ripple_animation.dart';
 
 class TimerDisplay extends StatelessWidget {
   const TimerDisplay({super.key});
@@ -42,49 +43,61 @@ class TimerDisplay extends StatelessWidget {
         break;
     }
 
-    return Container(
-      width: 250,
-      height: 250,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 10,
-            offset: Offset(0, 3),
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        if (timerProvider.status == TimerStatus.running)
+          RippleAnimation(
+            size: 350,
+            color: backgroundColor,
+            rippleCount: 5,
+            isActive: true,
           ),
-        ],
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              phaseText,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+        Container(
+          width: 250,
+          height: 250,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 10,
+                offset: Offset(0, 3),
               ),
+            ],
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  phaseText,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  '$minutes:$seconds',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 60,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (timerProvider.phase != TimerPhase.complete)
+                  Text(
+                    '循環 ${timerProvider.currentCycle + 1}/${timerProvider.totalCycles}',
+                    style: TextStyle(color: Colors.white70, fontSize: 16),
+                  ),
+              ],
             ),
-            SizedBox(height: 10),
-            Text(
-              '$minutes:$seconds',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 60,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (timerProvider.phase != TimerPhase.complete)
-              Text(
-                '循環 ${timerProvider.currentCycle + 1}/${timerProvider.totalCycles}',
-                style: TextStyle(color: Colors.white70, fontSize: 16),
-              ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

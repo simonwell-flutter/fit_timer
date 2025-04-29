@@ -17,11 +17,13 @@ class HomeScreen extends StatelessWidget {
     final player = AudioPlayer();
 
     return Scaffold(
+      backgroundColor: Color(0xFF121212), // 深色背景
       appBar: AppBar(
-        title: Text('FitTimer'),
+        backgroundColor: Color(0xFF1E1E1E), // 深色AppBar
+        title: Text('FitTimer', style: TextStyle(color: Colors.white)),
         actions: [
           IconButton(
-            icon: Icon(Icons.list),
+            icon: Icon(Icons.list, color: Colors.white),
             onPressed: () {
               Navigator.push(
                 context,
@@ -30,16 +32,13 @@ class HomeScreen extends StatelessWidget {
             },
           ),
           IconButton(
-            icon: Icon(Icons.settings),
+            icon: Icon(Icons.settings, color: Colors.white),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder:
-                      (context) => SettingsScreen(
-                        workout: null, // 可以傳遞 null 或者某個訓練模式對象
-                        isNew: true, // 設置是否是新訓練模式
-                      ),
+                      (context) => SettingsScreen(workout: null, isNew: true),
                 ),
               );
             },
@@ -50,35 +49,80 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TimerDisplay(),
+            // 添加動畫效果
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: Duration(milliseconds: 500),
+              builder: (context, value, child) {
+                return Transform.scale(scale: value, child: child);
+              },
+              child: TimerDisplay(),
+            ),
             SizedBox(height: 20),
-            // 這裡傳遞進度、階段和顏色
-            CustomProgressIndicator(
-              progress: timerProvider.progress, // 進度
-              phase: timerProvider.phase.toString(), // 訓練階段
-              phaseColor: _getPhaseColor(timerProvider.phase), // 訓練階段顏色
+            // 進度條動畫
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: timerProvider.progress),
+              duration: Duration(milliseconds: 300),
+              builder: (context, value, child) {
+                return CustomProgressIndicator(
+                  progress: value,
+                  phase: timerProvider.phase.toString(),
+                  phaseColor: _getPhaseColor(timerProvider.phase),
+                );
+              },
             ),
             SizedBox(height: 40),
-            ControlButtons(),
+            // 控制按鈕動畫
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: Duration(milliseconds: 700),
+              builder: (context, value, child) {
+                return Transform.translate(
+                  offset: Offset(0, 20 * (1 - value)),
+                  child: Opacity(opacity: value, child: child),
+                );
+              },
+              child: ControlButtons(),
+            ),
             SizedBox(height: 40),
-            // 如果沒有正在進行的訓練，顯示快速開始按鈕
             if (timerProvider.status == TimerStatus.initial &&
                 timerProvider.currentWorkout == null)
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                ),
-                onPressed: () async {
-                  await player.setAsset('assets/sounds/workout_start.mp3');
-                  await player.play();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SavedWorkoutsScreen(),
-                    ),
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: Duration(milliseconds: 1000),
+                builder: (context, value, child) {
+                  return Transform.scale(
+                    scale: value,
+                    child: Opacity(opacity: value, child: child),
                   );
                 },
-                child: Text('快速開始訓練'),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFBB86FC), // 紫色按鈕
+                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  onPressed: () async {
+                    await player.setAsset('assets/sounds/workout_start.mp3');
+                    await player.play();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SavedWorkoutsScreen(),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    '快速開始訓練',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
           ],
         ),
@@ -90,15 +134,15 @@ class HomeScreen extends StatelessWidget {
   Color _getPhaseColor(TimerPhase phase) {
     switch (phase) {
       case TimerPhase.work:
-        return Colors.red; // 運動階段為紅色
+        return Color(0xFFCF6679); // 柔和的紅色
       case TimerPhase.rest:
-        return Colors.blue; // 休息階段為藍色
+        return Color(0xFF03DAC6); // 柔和的藍綠色
       case TimerPhase.warmup:
-        return Colors.orange; // 預熱為橙色
+        return Color(0xFFFFB74D); // 柔和的橙色
       case TimerPhase.cooldown:
-        return Colors.green; // 緩和為綠色
+        return Color(0xFF81C784); // 柔和的綠色
       default:
-        return Colors.grey; // 默認為灰色
+        return Color(0xFF9E9E9E); // 柔和的灰色
     }
   }
 }

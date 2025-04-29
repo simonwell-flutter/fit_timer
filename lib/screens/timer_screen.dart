@@ -7,7 +7,7 @@ import '../widgets/progress_indicator.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 class TimerScreen extends StatefulWidget {
-  const TimerScreen({super.key}); // 添加 key 參數
+  const TimerScreen({super.key});
 
   @override
   TimerScreenState createState() => TimerScreenState();
@@ -20,16 +20,12 @@ class TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
-    // 保持螢幕常亮
     WakelockPlus.enable();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-
-    // 釋放螢幕常亮
     WakelockPlus.disable();
     super.dispose();
   }
@@ -42,13 +38,11 @@ class TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
 
     if (state == AppLifecycleState.paused) {
       _isActive = false;
-      // 如果計時器正在運行，則記錄暫停時間
       if (timerProvider.status == TimerStatus.running) {
         timerProvider.pause();
       }
     } else if (state == AppLifecycleState.resumed) {
       _isActive = true;
-      // 用戶返回應用，提示是否繼續
       if (timerProvider.status == TimerStatus.paused) {
         _showResumeDialog();
       }
@@ -62,8 +56,12 @@ class TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: Text('繼續訓練？'),
-            content: Text('你想要繼續當前的訓練嗎？'),
+            backgroundColor: Color(0xFF1E1E1E),
+            title: Text('繼續訓練？', style: TextStyle(color: Colors.white)),
+            content: Text(
+              '你想要繼續當前的訓練嗎？',
+              style: TextStyle(color: Colors.white70),
+            ),
             actions: [
               TextButton(
                 child: Text('取消'),
@@ -90,8 +88,12 @@ class TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: Text('退出訓練'),
-            content: Text('你確定要退出訓練嗎？'),
+            backgroundColor: Color(0xFF1E1E1E),
+            title: Text('退出訓練', style: TextStyle(color: Colors.white)),
+            content: Text(
+              '你確定要退出訓練嗎？',
+              style: TextStyle(color: Colors.white70),
+            ),
             actions: [
               TextButton(
                 child: Text('取消'),
@@ -100,12 +102,13 @@ class TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
                 },
               ),
               TextButton(
-                child: Text('退出'),
+                style: TextButton.styleFrom(foregroundColor: Color(0xFFCF6679)),
                 onPressed: () {
-                  timerProvider.reset(); // 重置計時器
+                  timerProvider.reset();
                   Navigator.of(ctx).pop();
-                  Navigator.of(context).pop(); // 返回主頁面
+                  Navigator.of(context).pop();
                 },
+                child: Text('退出'),
               ),
             ],
           ),
@@ -117,7 +120,6 @@ class TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
     final timerProvider = Provider.of<TimerProvider>(context);
     final workout = timerProvider.currentWorkout;
 
-    // 如果沒有正在進行的訓練，返回主頁面
     if (workout == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.of(context).pop();
@@ -125,7 +127,6 @@ class TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
       return Container();
     }
 
-    // 如果訓練完成，顯示完成畫面
     if (timerProvider.phase == TimerPhase.complete && _isActive) {
       return _buildCompletionScreen();
     }
@@ -140,9 +141,9 @@ class TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(workout.name),
+          title: Text(workout.name, style: TextStyle(color: Colors.white)),
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
+            icon: Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () {
               if (timerProvider.status == TimerStatus.running) {
                 _showExitDialog();
@@ -157,17 +158,14 @@ class TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 計時顯示區域
                 TimerDisplay(),
                 SizedBox(height: 40),
-                // 進度指示器
                 CustomProgressIndicator(
-                  progress: timerProvider.progress, // 傳遞進度值
-                  phase: timerProvider.phase.toString(), // 傳遞當前階段
-                  phaseColor: _getPhaseColor(timerProvider.phase), // 根據階段顯示顏色
+                  progress: timerProvider.progress,
+                  phase: timerProvider.phase.toString(),
+                  phaseColor: _getPhaseColor(timerProvider.phase),
                 ),
                 SizedBox(height: 40),
-                // 控制按鈕區域
                 ControlButtons(),
               ],
             ),
@@ -177,30 +175,60 @@ class TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
     );
   }
 
-  // 根據當前階段返回不同的顏色
   Color _getPhaseColor(TimerPhase phase) {
     switch (phase) {
       case TimerPhase.work:
-        return Colors.red; // 運動階段為紅色
+        return Color(0xFFCF6679);
       case TimerPhase.rest:
-        return Colors.blue; // 休息階段為藍色
+        return Color(0xFF03DAC6);
       case TimerPhase.warmup:
-        return Colors.orange; // 預熱為橙色
+        return Color(0xFFFFB74D);
       case TimerPhase.cooldown:
-        return Colors.green; // 緩和為綠色
+        return Color(0xFF81C784);
       default:
-        return Colors.grey; // 默認為灰色
+        return Color(0xFF9E9E9E);
     }
   }
 
-  // 訓練完成畫面
   Widget _buildCompletionScreen() {
     return Scaffold(
-      appBar: AppBar(title: Text('訓練完成')),
+      appBar: AppBar(
+        title: Text('訓練完成', style: TextStyle(color: Colors.white)),
+      ),
       body: Center(
-        child: Text(
-          '恭喜完成訓練！',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.check_circle_outline,
+              size: 100,
+              color: Color(0xFFBB86FC),
+            ),
+            SizedBox(height: 24),
+            Text(
+              '恭喜完成訓練！',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              '你已經完成了所有的訓練循環',
+              style: TextStyle(fontSize: 16, color: Colors.white70),
+            ),
+            SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              ),
+              child: Text('返回主頁', style: TextStyle(fontSize: 16)),
+            ),
+          ],
         ),
       ),
     );

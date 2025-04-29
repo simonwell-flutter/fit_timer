@@ -105,9 +105,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: EdgeInsets.all(16),
                 child: TextFormField(
                   controller: _nameController,
+                  style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: '訓練名稱',
+                    labelStyle: TextStyle(color: Colors.white70),
                     border: OutlineInputBorder(),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white30),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFBB86FC)),
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -125,12 +133,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildSliderSetting(
                   icon: Icons.fitness_center,
                   label: '運動時間',
-                  value: _workSeconds.toDouble(), // 將 int 轉換為 double
+                  value: _workSeconds.toDouble(),
                   min: 5,
                   max: 300,
                   onChanged: (value) {
                     setState(() {
-                      _workSeconds = value.toInt(); // 更新為 int
+                      _workSeconds = value.toInt();
                     });
                   },
                   formatValue: _formatDuration,
@@ -139,12 +147,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildSliderSetting(
                   icon: Icons.pause,
                   label: '休息時間',
-                  value: _restSeconds.toDouble(), // 將 int 轉換為 double
+                  value: _restSeconds.toDouble(),
                   min: 5,
                   max: 180,
                   onChanged: (value) {
                     setState(() {
-                      _restSeconds = value.toInt(); // 更新為 int
+                      _restSeconds = value.toInt();
                     });
                   },
                   formatValue: _formatDuration,
@@ -233,7 +241,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Text(
               title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             SizedBox(height: 16),
             ...children,
@@ -250,40 +262,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required double min,
     required double max,
     required ValueChanged<double> onChanged,
-    required String Function(int) formatValue,
+    required String Function(double) formatValue,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(icon, size: 20, color: Theme.of(context).primaryColor),
+            Icon(icon, color: Color(0xFFBB86FC)),
             SizedBox(width: 8),
             Text(
               label,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            Spacer(),
-            Text(
-              formatValue(value.toInt()),
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
         SizedBox(height: 8),
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
-            trackHeight: 6,
-            thumbShape: RoundSliderThumbShape(enabledThumbRadius: 12),
+            activeTrackColor: Color(0xFFBB86FC),
+            inactiveTrackColor: Colors.white30,
+            thumbColor: Color(0xFFBB86FC),
+            overlayColor: Color(0xFFBB86FC).withOpacity(0.2),
+            valueIndicatorColor: Color(0xFFBB86FC),
+            valueIndicatorTextStyle: TextStyle(color: Colors.white),
           ),
           child: Slider(
             value: value,
             min: min,
             max: max,
-            divisions: ((max - min) / 5).round(),
-            label: formatValue(value.toInt()),
+            divisions: (max - min).toInt(),
+            label: formatValue(value),
             onChanged: onChanged,
           ),
+        ),
+        Text(
+          formatValue(value),
+          style: TextStyle(color: Colors.white70, fontSize: 12),
         ),
       ],
     );
@@ -297,65 +315,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required ValueChanged<int> onChanged,
   }) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        Spacer(),
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: Row(
-            children: [
-              _buildNumberButton(
-                icon: Icons.remove,
-                onPressed: value > min ? () => onChanged(value - 1) : null,
+        Row(
+          children: [
+            IconButton(
+              icon: Icon(Icons.remove, color: Color(0xFFBB86FC)),
+              onPressed: value > min ? () => onChanged(value - 1) : null,
+            ),
+            Text(
+              '$value',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  value.toString(),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-              _buildNumberButton(
-                icon: Icons.add,
-                onPressed: value < max ? () => onChanged(value + 1) : null,
-              ),
-            ],
-          ),
+            ),
+            IconButton(
+              icon: Icon(Icons.add, color: Color(0xFFBB86FC)),
+              onPressed: value < max ? () => onChanged(value + 1) : null,
+            ),
+          ],
         ),
       ],
-    );
-  }
-
-  Widget _buildNumberButton({
-    required IconData icon,
-    required VoidCallback? onPressed,
-  }) {
-    return InkWell(
-      onTap: onPressed,
-      child: Container(
-        padding: EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color:
-              onPressed == null
-                  ? Colors.grey.shade200
-                  : Theme.of(context).primaryColor.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(
-          icon,
-          size: 20,
-          color:
-              onPressed == null
-                  ? Colors.grey.shade400
-                  : Theme.of(context).primaryColor,
-        ),
-      ),
     );
   }
 
@@ -376,21 +362,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Text(
               '訓練摘要',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             SizedBox(height: 12),
-            Text('總訓練時間: ${_formatDuration(totalTime)}'),
+            Text(
+              '總訓練時間: ${_formatDuration(totalTime.toDouble())}',
+              style: TextStyle(color: Colors.white70),
+            ),
             SizedBox(height: 4),
-            Text('運動時間: ${_formatDuration(totalWorkTime)}'),
+            Text(
+              '運動時間: ${_formatDuration(totalWorkTime.toDouble())}',
+              style: TextStyle(color: Colors.white70),
+            ),
             SizedBox(height: 4),
-            Text('休息時間: ${_formatDuration(totalRestTime)}'),
+            Text(
+              '休息時間: ${_formatDuration(totalRestTime.toDouble())}',
+              style: TextStyle(color: Colors.white70),
+            ),
             if (_warmupSeconds > 0) ...[
               SizedBox(height: 4),
-              Text('預熱時間: ${_formatDuration(_warmupSeconds)}'),
+              Text(
+                '預熱時間: ${_formatDuration(_warmupSeconds.toDouble())}',
+                style: TextStyle(color: Colors.white70),
+              ),
             ],
             if (_cooldownSeconds > 0) ...[
               SizedBox(height: 4),
-              Text('緩和時間: ${_formatDuration(_cooldownSeconds)}'),
+              Text(
+                '緩和時間: ${_formatDuration(_cooldownSeconds.toDouble())}',
+                style: TextStyle(color: Colors.white70),
+              ),
             ],
           ],
         ),
@@ -398,13 +403,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  String _formatDuration(int seconds) {
-    if (seconds < 60) {
-      return '$seconds秒';
-    } else {
-      final mins = seconds ~/ 60;
-      final secs = seconds % 60;
-      return mins > 0 && secs > 0 ? '$mins分$secs秒' : '$mins分';
-    }
+  String _formatDuration(double seconds) {
+    final mins = seconds ~/ 60;
+    final secs = seconds % 60;
+    return mins > 0 ? '$mins分$secs秒' : '$secs秒';
   }
 }
